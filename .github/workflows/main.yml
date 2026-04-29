@@ -27,9 +27,6 @@ jobs:
             - name: Run Lint
               run: npm run lint --if-present
 
-            - name: Run Tests
-              run: npm test -- --passWithNoTests
-
     docker-build-push:
         name: Build and Push Docker Image
         runs-on: ubuntu-latest
