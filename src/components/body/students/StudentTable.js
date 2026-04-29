@@ -16,7 +16,6 @@ import WarningPopup from "../../shared/warningPopup";
 import { toast } from "react-toastify";
 import RevokeDegreeDialog from "./helpers/revokeDegreeDialog";
 import Toast from "../../../utils/toast";
-import useWalletStore from "../../../helpers/infoStore/useWalletStore";
 
 const StudentTable = ({ students, onIssue, onAdded }) => {
     const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -26,7 +25,6 @@ const StudentTable = ({ students, onIssue, onAdded }) => {
     const [deleteData, setDeleteData] = useState({})
     const [revokeDialog, setRevokeDialog] = useState(false)
 
-    const { contract } = useWalletStore()
 
     const handleViewDetails = (id) => {
         const student = students.find((obj) => obj.id === id);

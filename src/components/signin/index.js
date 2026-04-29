@@ -31,7 +31,7 @@ const SignIn = ({ onLogin }) => {
     const [mfaStep, setMfaStep] = useState("initial");
     const [gaEnabled, setGaEnabled] = useState(false);
     const [pinEnabled, setPinEnabled] = useState(false);
-    const [selectedMethod, setSelectedMethod] = useState(""); // "pin" or "ga"
+    const [selectedMethod, setSelectedMethod] = useState("");
     const [mfaCode, setMfaCode] = useState("");
 
     const showToast = (message, severity = "info") => {
@@ -69,8 +69,6 @@ const SignIn = ({ onLogin }) => {
 
         try {
             const encryptedPassword = await encryptPassword(userCred.password);
-            // const response = await ServerFunc.signin(userCred.email, userCred.password);
-            // console.log("reposne login dta", response)
             const response = await ServerFunc.signin(userCred.email, encryptedPassword);
             const { accessToken, ga_enabled, pin_enabled, user_role, user_id, user_name } = response.data;
 
@@ -96,7 +94,7 @@ const SignIn = ({ onLogin }) => {
                 localStorage.setItem("accessToken", accessToken);
                 localStorage.setItem("login info", JSON.stringify({ user_role, user_id, user_name: user_name?.trim() }));
                 showToast("Login successful!", "success");
-                onLogin();
+                onLogin(accessToken);
             }
         } catch (error) {
             console.error("Login error", error);

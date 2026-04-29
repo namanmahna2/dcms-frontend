@@ -26,44 +26,57 @@ export default function AdminDashboard() {
 
     const [stats, setStats] = useState([])
 
-    const fetchData = async () => {
-        try {
-            const apiResponse = await Server.getDashboardCardsData()
-            const data = Array.isArray(apiResponse?.data) ? apiResponse.data[0] : {
-                students: "N/A",
-                degrees: "N/A",
-                activeSessions: "N/A",
-                anomalies: "N/A",
-            }
-            setStats(data)
-
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    const fetchStudents = async () => {
-        const res = await Server.getAllStudents();
-        const resData = Array.isArray(res.data)
-            ? res.data
-                .filter(obj => obj.tx_hash)
-                .map(obj => ({
-                    ...obj,
-                    name: obj.name
-                        .trim()
-                        .split(/\s+/)
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(" ")
-                }))
-            : [];
-
-        setStudents(resData);
-    };
-
     useEffect(() => {
-        fetchData()
-        fetchStudents()
-    }, [])
+        let isMounted = true;
+
+        const loadDashboard = async () => {
+            try {
+                const [cardsRes, studentsRes] = await Promise.all([
+                    Server.getDashboardCardsData(),
+                    Server.getAllStudents(),
+                ]);
+
+                if (!isMounted) return;
+
+                const cardsData = Array.isArray(cardsRes?.data)
+                    ? cardsRes.data[0]
+                    : {
+                        students: "N/A",
+                        degrees: "N/A",
+                        activeSessions: "N/A",
+                        anomalies: "N/A",
+                    };
+
+                const studentData = Array.isArray(studentsRes?.data)
+                    ? studentsRes.data
+                        .filter(obj => obj.tx_hash)
+                        .map(obj => ({
+                            ...obj,
+                            name: obj.name
+                                .trim()
+                                .split(/\s+/)
+                                .map(word =>
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                )
+                                .join(" ")
+                        }))
+                    : [];
+
+                setStats(cardsData);
+                setStudents(studentData);
+
+            } catch (error) {
+                console.error("Dashboard load failed:", error);
+                Toast.error("Dashboard data unavailable");
+            }
+        };
+
+        loadDashboard();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const handleVerify = async () => {
         if (!selectedStudent) return;
@@ -144,7 +157,7 @@ export default function AdminDashboard() {
                 width: "100%",
                 padding: 2,
                 background: "linear-gradient(135deg, #081421, #0a1d2e 60%, #092538)",
-                minHeight: "100vh",
+                minHeight: "100%",
                 color: "white",
                 gap: 4,
                 display: "flex",
@@ -155,7 +168,7 @@ export default function AdminDashboard() {
                 overflowY: "auto",
                 overflowX: "hidden",
 
-                scrollbarWidth: "thin", 
+                scrollbarWidth: "thin",
                 "&::-webkit-scrollbar": {
                     width: "6px",
                 },

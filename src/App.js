@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Box, Typography } from "@mui/material";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
@@ -14,114 +14,161 @@ import useAuthStore from "./helpers/infoStore/auth";
 import useTabStore from "./helpers/infoStore/tabStore";
 import { UseUserProfile } from "./helpers/queryHooks/userProfile";
 import useWalletStore from "./helpers/infoStore/useWalletStore";
-import useSocket from "./utils/sockets";
 import Server from "./server";
 import AccessDenied from "./components/helpers/accessDenied";
 
 function App() {
   const { connectWallet } = useWalletStore();
-  const { socket, messages } = useSocket("http://localhost:3011");
   const navigate = useNavigate();
-  const { tabName, setTabname } = useTabStore();
+  const { tabName } = useTabStore();
 
-  // Zustand: Auth state
-  const { isAuthenticated, setAuthenticated } = useAuthStore();
+  const {
+    isAuthenticated,
+    setAuthenticated,
+    setToken,
+  } = useAuthStore();
 
-  // Local states
   const [authChecked, setAuthChecked] = useState(false);
-
-  // 🔥 Forbidden / IP-block state
   const [isForbidden, setIsForbidden] = useState(false);
-  const [forbiddenMessage, setForbiddenMessage] = useState("");
+  const [forbiddenMessage, setForbiddenMessage] =
+    useState("");
 
-  // Fetch user profile only when authenticated
+  // =========================
+  // Profile Query
+  // =========================
   const {
     data: userProfileData = {},
     isFetching: isProfileLoading,
     error: profileError,
-    refetch: refetchProfile,
   } = UseUserProfile({
-    enabled: isAuthenticated,
+    enabled: authChecked && isAuthenticated,
   });
 
-  const tabCheckHandler = (tabName) => {
-    let _tabName = localStorage.getItem("tabName");
-    if (!_tabName) localStorage.setItem("tabName", tabName);
-  };
+  // =========================
+  // Helpers
+  // =========================
+  const tabCheckHandler = useCallback((tab) => {
+    const savedTab = localStorage.getItem("tabName");
 
-  const navigateHandler = () => {
-    const currentTab = localStorage.getItem("tabName") || "dashboard";
-
-    switch (currentTab) {
-      case "students":
-        navigate("/students");
-        break;
-      case "certificates":
-        navigate("/certificates");
-        break;
-      case "anomaly":
-        navigate("/anomaly");
-        break;
-      default:
-        navigate("/");
+    if (!savedTab) {
+      localStorage.setItem("tabName", tab);
     }
-  };
+  }, []);
 
-  // 🔹 Register 403 / forbidden callback once
+  const navigateHandler = useCallback(() => {
+    const currentTab =
+      localStorage.getItem("tabName") || "dashboard";
+
+    const routes = {
+      dashboard: "/",
+      students: "/students",
+      certificates: "/certificates",
+      anomaly: "/anomaly",
+      chatbot: "/chatbot",
+    };
+
+    navigate(routes[currentTab] || "/", {
+      replace: true,
+    });
+  }, [navigate]);
+
+  // =========================
+  // Forbidden Callback
+  // =========================
   useEffect(() => {
     Server.setForbiddenCallback((response) => {
       const msg =
         response?.data?.message ||
         "Access denied. Your IP or account has been blocked by the security system.";
+
       setForbiddenMessage(msg);
       setIsForbidden(true);
     });
   }, []);
 
-  // 🔹 Initial auth check from cookie
+  // =========================
+  // Initial Auth Check
+  // =========================
   useEffect(() => {
     const token = Cookies.get("x-access-token");
 
-    if (token) {
-      setAuthenticated(true);
-    } else {
-      setAuthenticated(false);
-    }
-
+    setAuthenticated(!!token);
     setAuthChecked(true);
   }, [setAuthenticated]);
 
-  // 🚨 Handle profile fetch errors
+  // =========================
+  // Profile Error Toast
+  // =========================
   useEffect(() => {
-    if (profileError) {
-      toast.error("Failed to load profile. Please try again.");
+    if (
+      profileError &&
+      !toast.isActive("profile-error")
+    ) {
+      toast.error(
+        "Failed to load profile. Please try again.",
+        {
+          toastId: "profile-error",
+        }
+      );
     }
   }, [profileError]);
 
-  // 🔹 On auth change: connect wallet & navigate
+  // =========================
+  // Auth Navigation
+  // =========================
   useEffect(() => {
-    if (isAuthenticated) {
-      connectWallet(true);
-      navigateHandler();
-    }
-  }, [isAuthenticated, connectWallet]); // navigateHandler is stable enough via localStorage
+    if (!authChecked || !isAuthenticated) return;
 
-  // 🔥 If forbidden, render access-denied page instead of the app
+    connectWallet(true);
+
+    const hasNavigated =
+      sessionStorage.getItem("hasNavigated");
+
+    if (!hasNavigated) {
+      navigateHandler();
+      sessionStorage.setItem(
+        "hasNavigated",
+        "true"
+      );
+    }
+  }, [
+    authChecked,
+    isAuthenticated,
+    connectWallet,
+    navigateHandler,
+  ]);
+
+  // =========================
+  // Forbidden Screen
+  // =========================
   if (isForbidden) {
     return (
       <>
-        <AccessDenied message={forbiddenMessage} />
-        <ToastContainer position="top-right" autoClose={2000} />
+        <AccessDenied
+          message={forbiddenMessage}
+        />
+        <ToastContainer
+          position="top-right"
+          autoClose={2000}
+        />
       </>
     );
   }
 
-  // Loading state
-  if (!authChecked || (isAuthenticated && isProfileLoading)) {
-    return <Typography sx={{ p: 2 }}>Loading...</Typography>;
+  // Loading
+  if (
+    !authChecked ||
+    (isAuthenticated &&
+      isProfileLoading)
+  ) {
+    return (
+      <Typography sx={{ p: 2 }}>
+        Loading...
+      </Typography>
+    );
   }
 
-  // Not authenticated → show SignIn
+  // Login Screen
   if (!isAuthenticated) {
     return (
       <>
@@ -133,7 +180,7 @@ function App() {
             overflow: "auto",
           }}
         >
-          {/* Background Image */}
+          {/* Background */}
           <Box
             component="img"
             src={pic}
@@ -149,30 +196,47 @@ function App() {
             }}
           />
 
-          {/* Centered Sign-in Form */}
+          {/* Sign In */}
           <SignIn
-            onLogin={() => {
+            onLogin={(tokenFromAPI) => {
+              Cookies.set(
+                "x-access-token",
+                tokenFromAPI
+              );
+
+              setToken(tokenFromAPI);
               setAuthenticated(true);
-              refetchProfile();
+
+              sessionStorage.removeItem(
+                "hasNavigated"
+              );
+
               tabCheckHandler(tabName);
-              navigateHandler();
-              toast.success("Signed in successfully!", {
-                autoClose: 2000,
-              });
+
+              toast.success(
+                "Signed in successfully!",
+                {
+                  autoClose: 2000,
+                }
+              );
             }}
           />
         </Box>
-        <ToastContainer position="top-right" autoClose={2000} />
+
+        <ToastContainer
+          position="top-right"
+          autoClose={2000}
+        />
       </>
     );
   }
 
-  // Authenticated → main app layout
+  // Main App
   return (
     <Box
       sx={{
-        height: "100vh",
-        width: "100vw",
+        height: "100dvh",
+        width: "100dvw",
         maxWidth: "100vw",
         overflow: "hidden",
         display: "flex",
@@ -180,10 +244,16 @@ function App() {
         position: "relative",
       }}
     >
-      <Header userProfile={userProfileData} />
-      <TabSection selectedTabName={tabName} />
+      <Header
+        userProfile={userProfileData}
+      />
+      <TabSection />
       <Body />
-      <ToastContainer position="top-right" autoClose={2000} />
+
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+      />
     </Box>
   );
 }

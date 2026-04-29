@@ -22,8 +22,6 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import IssueCertificateDialog from "./issueCertificate";
 import ViewDegree from "./viewDegree";
-
-import Toast from "../../../utils/toast";
 import moment from "moment/moment";
 
 import { UseAllCertificate } from "../../../helpers/queryHooks/allCertificates";
@@ -41,7 +39,6 @@ const Certificates = () => {
     const {
         data: certs = [],
         isFetching: isLoading,
-        error: profileError,
         refetch: refetchCertData
     } = UseAllCertificate({ enabled: true });
 
@@ -70,7 +67,7 @@ const Certificates = () => {
     return (
         <Box
             sx={{
-                flex: 1,
+                minHeight: "100%",
                 display: "flex",
                 flexDirection: "column",
                 color: "#fff",

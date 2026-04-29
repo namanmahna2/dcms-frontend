@@ -8,15 +8,12 @@ const Body = () => {
     return (
         <Box
             sx={{
-                flex: 1,
+                height: "84%",
                 width: "100%",
-                maxWidth: "100vw",
-                position: "relative",
                 overflowY: "auto",
                 overflowX: "hidden",
-                display: "block",
-
                 backgroundColor: "#0A0F1F",
+                overscrollBehavior: "contain",
             }}
         >
             <AppRoutes />

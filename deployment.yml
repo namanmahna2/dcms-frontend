@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcms-frontend-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dcms-frontend
+  template:
+    metadata:
+      labels:
+        app: dcms-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: dcms-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcms-frontend-service
+spec:
+  selector:
+    app: dcms-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort

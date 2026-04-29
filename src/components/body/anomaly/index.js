@@ -9,19 +9,6 @@ import moment from "moment";
 import Toast from "../../../utils/toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-const keyMap = {
-    created_at: "Created At",
-    type: "Type",
-    issuer_id: "Issuer Id",
-    student_id: "Student Id",
-    client_ip: "IP",
-    wallet_address: "Wallet Address",
-    tx_hash: "Tx Hash",
-    anomaly_score: "Anomaly Score",
-    details: "Details",
-    handled: "Handled",
-};
-
 const ANOMALY_LABELS = {
     unusual_gas_usage: "Unusual Gas Usage",
     rapid_minting: "Rapid Minting",
@@ -50,7 +37,6 @@ const formatRow = (item, index = {}) => ({
 });
 
 const Anomaly = () => {
-    const queryClient = useQueryClient();
     const [localRows, setLocalRows] = useState([]);
     const [highlighted, setHighlighted] = useState([]);
     const {
@@ -92,18 +78,7 @@ const Anomaly = () => {
             Toast.error("Something went wrong")
             console.error(error)
         }
-    };
-
-    const handleMarkHandled = (rowId) => {
-        setLocalRows((prev) =>
-            prev.map((row) =>
-                row.id === rowId ? { ...row, handled: "Yes" } : row
-            )
-        );
-        console.log("Marked handled:", rowId);
-
-        // TODO: API call if needed
-    };
+    }
 
 
     // LIVE UPDATE LOGIC (messages could be empty)
@@ -191,57 +166,55 @@ const Anomaly = () => {
 
     return (
         <Box sx={{
-            flex: 1,
+            minHeight: "100%",
             display: "flex",
             flexDirection: "column",
             color: "#fff",
             p: 3,
             bgcolor: "#0b0f19",
         }}>
-            <Box sx={{ p: 3, borderRadius: "20px", background: "#0f2027" }}>
-                <Box sx={{ height: "72vh" }}>
-                    <DataGrid
-                        rows={localRows}
-                        columns={columns}
-                        pageSizeOptions={[20, 50, 100]}
-                        initialState={{
-                            pagination: { paginationModel: { pageSize: 20, page: 0 } },
-                        }}
-                        disableRowSelectionOnClick
-                        sx={{
-                            color: "white",
-                            border: "none",
-                            fontSize: "14px",
+            <Box sx={{ p: 3, borderRadius: "20px", background: "#0f2027", height: "100%" }}>
+                <DataGrid
+                    rows={localRows}
+                    columns={columns}
+                    pageSizeOptions={[20, 50, 100]}
+                    initialState={{
+                        pagination: { paginationModel: { pageSize: 20, page: 0 } },
+                    }}
+                    disableRowSelectionOnClick
+                    sx={{
+                        color: "white",
+                        border: "none",
+                        fontSize: "14px",
 
-                            "& .MuiDataGrid-columnHeaders": {
-                                background: "#162c35",
-                                color: "#00e5ff",
-                                fontWeight: "bold",
-                                fontSize: "15px",
-                                borderRadius: "10px 10px 0 0",
-                            },
+                        "& .MuiDataGrid-columnHeaders": {
+                            background: "#162c35",
+                            color: "#00e5ff",
+                            fontWeight: "bold",
+                            fontSize: "15px",
+                            borderRadius: "10px 10px 0 0",
+                        },
 
-                            "& .MuiDataGrid-row": {
-                                background: "#0f2027",
-                            },
+                        "& .MuiDataGrid-row": {
+                            background: "#0f2027",
+                        },
 
-                            "& .MuiDataGrid-cell": {
-                                borderColor: "#1b3a49",
-                            },
+                        "& .MuiDataGrid-cell": {
+                            borderColor: "#1b3a49",
+                        },
 
-                            "& .highlight-row": {
-                                animation: "flash 0.6s ease-in-out alternate",
-                                backgroundColor: "rgba(0,229,255,0.3) !important",
-                            },
+                        "& .highlight-row": {
+                            animation: "flash 0.6s ease-in-out alternate",
+                            backgroundColor: "rgba(0,229,255,0.3) !important",
+                        },
 
-                            "@keyframes flash": {
-                                from: { backgroundColor: "rgba(0,229,255,0.1)" },
-                                to: { backgroundColor: "rgba(0,229,255,0.4)" },
-                            }
-                        }}
-                    />
+                        "@keyframes flash": {
+                            from: { backgroundColor: "rgba(0,229,255,0.1)" },
+                            to: { backgroundColor: "rgba(0,229,255,0.4)" },
+                        }
+                    }}
+                />
 
-                </Box>
             </Box>
         </Box>
     );

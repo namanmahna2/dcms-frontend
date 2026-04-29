@@ -1,5 +1,4 @@
-import { Box, Typography } from "@mui/material";
-import Students from "../students";
+import { Box } from "@mui/material";
 
 const Acadamics = () => {
     return (

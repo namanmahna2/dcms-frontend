@@ -1,62 +1,57 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import Server from "../../server";  // <-- assuming this contains isAdmin()
+import useUserStore from "../../helpers/infoStore/useUserStore";
 
 const useSocket = (url) => {
-    const [socket, setSocket] = useState(null);
-    const [messages, setMessages] = useState([]);
-    const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useUserStore(); // ✅ top level hook
 
-    // 🔹 Check admin status on mount
-    useEffect(() => {
-        const checkAdmin = async () => {
-            try {
-                const res = await Server.isAdmin(); 
-                setIsAdmin(res?.data?.isAdmin === true);
-            } catch (err) {
-                console.error("Failed to verify admin:", err);
-                setIsAdmin(false);
-            }
-        };
+  const [socket, setSocket] = useState(null);
+  const [messages, setMessages] = useState([]);
 
-        checkAdmin();
-    }, []);
+  const isAdmin = user === "admin";
 
-    useEffect(() => {
-        const newSocket = io(url, {
-            transports: ["websocket"],
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-        });
+  useEffect(() => {
+    if (!user || !url) return;
 
-        setSocket(newSocket);
+    console.log("Socket initialized for:", user);
 
-        newSocket.on("connect", () => {
-            console.log("Connected to server:", newSocket.id);
-        });
+    const newSocket = io(url, {
+      transports: ["websocket"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
-        // 🔥 Only append messages if user is admin
-        newSocket.on("new anomaly", async (data) => {
-            if (!isAdmin) {
-                console.log("Ignoring anomaly event — user is NOT admin.");
-                return;
-            }
+    setSocket(newSocket);
 
-            console.log("🚨 New anomaly received:", data);
-            setMessages((prev) => [...prev, ...data]);
-        });
+    newSocket.on("connect", () => {
+      console.log("Connected to server:", newSocket.id);
+    });
 
-        newSocket.on("disconnect", () => {
-            console.log("Disconnected from server");
-        });
+    newSocket.on("new anomaly", (data) => {
+      if (!isAdmin) {
+        console.log(
+          "Ignoring anomaly event — user is NOT admin."
+        );
+        return;
+      }
 
-        return () => {
-            newSocket.disconnect();
-        };
-    }, [url, isAdmin]); // depends on admin state
+      console.log("🚨 New anomaly received:", data);
 
-    return { socket, messages, isAdmin };
+      setMessages((prev) => [...prev, ...data]);
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("Disconnected from server");
+    });
+
+    return () => {
+      console.log("Socket cleanup");
+      newSocket.disconnect();
+    };
+  }, [url, user, isAdmin]);
+
+  return { socket, messages, isAdmin };
 };
 
 export default useSocket;

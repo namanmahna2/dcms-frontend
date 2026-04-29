@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { ethers } from "ethers";
 import abi from "../../contract/demoDegree.json";
 
-const CONTRACT_ADDRESS = "0x3CA339C60a346167F4c053f43208a25a3FC5A7D9";
+const CONTRACT_ADDRESS = "0x3f1c0616bf9ca164dd1ee24df6ea15e9b422c9eb";
 // Ganache CLI shows Chain Id: 1337 → hex = 0x539
 const CHAIN_ID = "0x539";
 
@@ -13,9 +13,7 @@ const useWalletStore = create((set, get) => ({
     connecting: false,
     error: null,
 
-    // ----------------------------------
     // READ-ONLY connection (students)
-    // ----------------------------------
     connectReadOnly: async () => {
         // if already connected with a provider, don't reconnect
         const { provider, contract } = get();
@@ -40,7 +38,7 @@ const useWalletStore = create((set, get) => ({
 
             console.log("✅ Connected read-only (student)");
         } catch (e) {
-            console.error("❌ Read-only connection failed", e);
+            console.error("Read-only connection failed", e);
             set({ error: "Unable to connect in read-only mode." });
         } finally {
             set({ connecting: false });

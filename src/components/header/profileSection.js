@@ -111,7 +111,7 @@ const ProfileSection = ({ userProfile }) => {
             // Also clear Zustand auth
             setAuthenticated(false);
 
-            navigate("/login");
+            // navigate("/login");
         } catch (error) {
             Toast.error("Something went wrong!");
         }

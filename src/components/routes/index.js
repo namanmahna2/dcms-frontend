@@ -4,6 +4,7 @@ import Dashboard from "../body/dashboard/Dashboard"
 import Students from "../body/students"
 import Certificates from "../body/certificates"
 import Anomaly from "../body/anomaly"
+import Chatbot from "../body/chatbot"
 import { Box } from "@mui/system"
 
 const AppRoutes = () => {
@@ -11,12 +12,8 @@ const AppRoutes = () => {
         <Box
             sx={{
                 width: "100%",
-                // maxWidth: "100vw",
-                overflow: "visible",
-                height: "auto",
                 minHeight: "100%",
-                // p:6
-
+                backgroundColor: "inherit"
             }}
         >
             <Routes>
@@ -25,6 +22,7 @@ const AppRoutes = () => {
                 <Route path="/students" element={<Students />} />
                 <Route path="/certificates" element={<Certificates />} />
                 <Route path="/anomaly" element={<Anomaly />} />
+                <Route path="/chatbot" element={<Chatbot />} />
             </Routes>
         </Box>
     );

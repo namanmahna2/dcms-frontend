@@ -23,7 +23,7 @@ import moment from "moment";
 import Toast from "../../../../utils/toast";
 import Server from "../../../../server";
 
-export default function StudentDashboard() {
+export default function StudentDashboard({ useProfile }) {
     const [openDegreeDialog, setOpenDegreeDialog] = useState(false);
     const [selectedCert, setSelectedCert] = useState(null);
     const [degrees, setDegrees] = useState([]);
@@ -102,7 +102,7 @@ export default function StudentDashboard() {
             <Box
                 sx={{
                     width: "100%",
-                    height: "100vh",
+                    height: "100%",
                     overflow: "hidden",
                     // background: "yellow",
                     pr: 2,

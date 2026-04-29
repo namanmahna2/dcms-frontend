@@ -4,7 +4,8 @@ import axios from "axios";
 import Toast from "../utils/toast";
 
 export default class Server {
-    static BASE_URL = "http://localhost:3011";
+    // static BASE_URL = process.env.REACT_APP_API_URL;
+    static BASE_URL = "http://localhost:3011/api";
     static onLogout = null;
     static onForbidden = null;
 
@@ -16,8 +17,15 @@ export default class Server {
         this.onForbidden = callback;
     }
 
-    static async makeRequest(method, endpoint, data = {}, params = {}) {
+    static async makeRequest(
+        method,
+        endpoint,
+        data = {},
+        params = {},
+        hasRetried = false
+    ) {
         try {
+            console.log("API CALL =>", endpoint, new Date().toISOString());
             const accessToken = Cookies.get("x-access-token");
 
             const response = await axios({
@@ -26,7 +34,9 @@ export default class Server {
                 data,
                 params,
                 headers: {
-                    ...(data instanceof FormData ? {} : { "Content-Type": "application/json" }),
+                    ...(data instanceof FormData
+                        ? {}
+                        : { "Content-Type": "application/json" }),
                     "x-access-token": accessToken || "",
                 },
                 withCredentials: true,
@@ -35,79 +45,61 @@ export default class Server {
             return response.data;
         } catch (error) {
             if (!error.response) {
+                Toast.error("Backend server is not reachable.");
                 throw error;
             }
 
             const status = error.response.status;
-            const message = error.response?.data?.message?.toLowerCase();
+            const message =
+                error.response?.data?.message?.toLowerCase();
+
             const isRefreshing = endpoint === "/users/refresh";
 
-            console.log("axios error response >>>", error.response);
-
-            // 401 / refresh handling (unchanged)
             if (
                 status === 401 &&
                 !isRefreshing &&
-                (message?.includes("token expired") || message?.includes("token verification failed"))
+                !hasRetried &&
+                (
+                    message?.includes("token expired") ||
+                    message?.includes("token verification failed")
+                )
             ) {
-                // ... your existing refresh logic ...
-                if (!this.refreshPromise) {
-                    this.refreshPromise = axios.post(`${this.BASE_URL}/users/refresh`, {}, {
-                        withCredentials: true,
-                    })
-                        .then(() => {
-                            console.log("Token refresh success");
-                            this.refreshPromise = null;
-                        })
-                        .catch(async (refreshErr) => {
-                            console.warn("Refresh token failed. Logging out.");
+                try {
+                    if (!this.refreshPromise) {
+                        this.refreshPromise = axios.post(
+                            `${this.BASE_URL}/users/refresh`,
+                            {},
+                            { withCredentials: true }
+                        );
+                    }
 
-                            // 
-                            await this.signout()
+                    await this.refreshPromise;
+                    this.refreshPromise = null;
 
-                            if (typeof this.onLogout === "function") {
-                                this.onLogout();
-                            }
+                    return this.makeRequest(
+                        method,
+                        endpoint,
+                        data,
+                        params,
+                        true
+                    );
+                } catch (err) {
+                    this.refreshPromise = null;
 
-                            this.refreshPromise = null;
-                            throw new Error("Refresh token invalid");
-                        });
+                    Cookies.remove("x-access-token");
+                    Cookies.remove("refresh-token");
+
+                    if (typeof this.onLogout === "function") {
+                        this.onLogout();
+                    }
+
+                    throw err;
                 }
-
-                await this.refreshPromise;
-                return this.makeRequest(method, endpoint, data, params);
-            } else if (status === 401 && error.response?.data?.forceLogout) {
-                console.log("Force logout detected. Clearing cookies...");
-
-                Cookies.remove("x-access-token");
-                Cookies.remove("refresh-token");
-                localStorage.removeItem("selectedTab");
-                localStorage.removeItem("login info");
-
-                if (typeof this.onLogout === "function") {
-                    this.onLogout();
-                }
-
-                return;
-            }
-
-            // 🔥 403 Forbidden -> show page
-            if (status === 403) {
-                console.log("Handling forbidden (403) request");
-                Toast.error(error.response?.data?.message || "Access denied.");
-
-                if (typeof this.onForbidden === "function") {
-                    this.onForbidden(error.response);
-                }
-
-                // Optionally: don’t rethrow, so React Query etc. doesn’t treat as error
-                // return; 
             }
 
             throw error;
         }
     }
-
 
 
     // Users
@@ -133,8 +125,6 @@ export default class Server {
         console.log("data for update", data)
         return this.makeRequest("patch", "/users/v1/profile", data);
     }
-
-
 
 
 

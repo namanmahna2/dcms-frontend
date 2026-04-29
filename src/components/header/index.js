@@ -9,7 +9,7 @@ const Header = ({ userProfile }) => {
         display: "flex",
         justifyContent: "flex-end",
         alignItems: "center",
-        height: "8vh",
+        height: "8%",
         px: 6,
         background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)", // same as TabSection
         borderBottom: "1px solid #00e5ff", // neon cyan border to separate header from tabs

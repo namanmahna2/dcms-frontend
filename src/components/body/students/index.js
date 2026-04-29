@@ -41,7 +41,7 @@ const Students = () => {
 
     return (
         <Box sx={{
-            flex: 1,
+            minHeight: "100%",
             display: "flex",
             flexDirection: "column",
             color: "#fff",

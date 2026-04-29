@@ -66,19 +66,19 @@ const IssueCertificateDialog = ({ open, setOpenIssue, refetch: refetch_cert }) =
         }
 
         try {
-            const issueDegree = await Server.issueDegree(form.student_id)
+            await Server.issueDegree(form.student_id)
             setOpenIssue(false)
             refetch_cert()
             refetchStudentData()
             Toast.success("degree issued successfully")
-            // const degreeData = `${form.degree_name} - ${form.issuer}`;
-            // const tx = await contract.safeMint(walletToUse, degreeData);
+            //             const degreeData = `${form.degree_name} - ${form.issuer}`;
+            //             const tx = await contract.safeMint(walletToUse, degreeData);
 
-            // console.log("Mint Tx:", tx.hash);
-            // await tx.wait();
+            //             console.log("Mint Tx:", tx.hash);
+            //             await tx.wait();
 
             // alert("Degree certificate issued successfully!");
-            // setOpenIssue(false);
+            //             setOpenIssue(false);
         } catch (err) {
             console.error(err);
             Toast.error("Failed to load student details");
@@ -110,7 +110,7 @@ const IssueCertificateDialog = ({ open, setOpenIssue, refetch: refetch_cert }) =
                     letterSpacing: 0.5,
                 }}
             >
-            Issue New Certificate
+                Issue New Certificate
             </DialogTitle>
 
             <DialogContent sx={{ mt: 2 }}>
