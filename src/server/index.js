@@ -163,8 +163,8 @@ export default class Server {
         return this.makeRequest("post", `/cr/v1/issue`, { student_id: id })
     }
 
-    static async revokeDegree(id) {
-        return this.makeRequest("patch", `/cr/v1/revoke/${id}`)
+    static async revokeDegree(id, data) {
+        return this.makeRequest("patch", `/cr/v1/revoke/${id}`, { reason: data?.reason ?? "" })
     }
 
     static async getAllCertData() {

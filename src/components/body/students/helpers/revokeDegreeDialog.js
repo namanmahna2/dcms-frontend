@@ -8,22 +8,33 @@ import {
     TextField,
     Box,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const RevokeDegreeDialog = ({ open, onClose, onConfirm, student }) => {
     const [reason, setReason] = useState("");
 
+    useEffect(() => {
+        if (open) {
+            setReason("");
+        }
+    }, [open]);
+
+    const handleClose = () => {
+        setReason("");
+        onClose();
+    };
+
     const handleConfirm = () => {
         if (!reason.trim()) return;
-        onConfirm(student, reason);
-        setReason("");
-        onClose()
+
+        onConfirm(() => student, reason.trim());
+        handleClose();
     };
 
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={handleClose}
             fullWidth
             maxWidth="sm"
             PaperProps={{
@@ -44,8 +55,9 @@ const RevokeDegreeDialog = ({ open, onClose, onConfirm, student }) => {
                 <Typography sx={{ mb: 1, color: "#9cc8e2" }}>
                     Please enter a reason for revoking the degree of:
                 </Typography>
+
                 <Typography sx={{ fontWeight: 600, mb: 2 }}>
-                    {student?.name}
+                    {student?.name || "Unknown Student"}
                 </Typography>
 
                 <TextField
@@ -55,10 +67,10 @@ const RevokeDegreeDialog = ({ open, onClose, onConfirm, student }) => {
                     placeholder="Enter revoke reason..."
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
+                    autoFocus
                     sx={{
                         "& .MuiOutlinedInput-root": {
                             color: "#fff",
-                            borderColor: "#00eaff",
                         },
                         "& textarea": { color: "#fff" },
                     }}
@@ -67,7 +79,7 @@ const RevokeDegreeDialog = ({ open, onClose, onConfirm, student }) => {
 
             <DialogActions sx={{ p: 2 }}>
                 <Button
-                    onClick={onClose}
+                    onClick={handleClose}
                     sx={{
                         color: "#00eaff",
                         border: "1px solid rgba(0,234,255,0.5)",
@@ -80,12 +92,18 @@ const RevokeDegreeDialog = ({ open, onClose, onConfirm, student }) => {
 
                 <Button
                     onClick={handleConfirm}
+                    disabled={!reason.trim()}
                     variant="contained"
                     sx={{
                         bgcolor: "#00eaff",
                         color: "#000",
                         fontWeight: 600,
                         borderRadius: 2,
+                        px: 2,
+                        "&:disabled": {
+                            bgcolor: "rgba(0,234,255,0.3)",
+                            color: "#000",
+                        },
                     }}
                 >
                     Confirm Revoke
