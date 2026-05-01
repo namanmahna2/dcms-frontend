@@ -74,7 +74,7 @@ const StudentTable = ({ students, onIssue, onAdded }) => {
         try {
             console.log("Call backend you moron!!", student, reason)
 
-            const revokeDegree = await Server.revokeDegree(selectedStudent.id)
+            const revokeDegree = await Server.revokeDegree(selectedStudent.id, { reason })
             Toast.success(revokeDegree.message)
 
         } catch (error) {

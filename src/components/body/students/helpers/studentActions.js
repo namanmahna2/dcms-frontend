@@ -97,7 +97,7 @@ export default function StudentActions({ studentDetails, id, onView, onEdit, onD
             </Tooltip> */}
 
             <Tooltip
-                title={`${studentDetails.is_revoked && studentDetails.revocation_reason ? studentDetails.revocation_reason : !studentDetails.tx_hash ? "Degree Not Issued" : "Revoke Degree"}`}
+                title={`${studentDetails?.is_revoked && studentDetails.revocation_reason ? studentDetails.revocation_reason : !studentDetails?.tx_hash ? "Degree Not Issued" : "Revoke Degree"}`}
                 placement="right"
                 slotProps={{
                     tooltip: {

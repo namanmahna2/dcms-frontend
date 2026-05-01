@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: dcms-frontend:latest
+          image: dcms-web:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
